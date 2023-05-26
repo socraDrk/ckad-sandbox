@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-cm
+  namespace: frontend
+data: 
+  my_variable: "Hello World from frontend!"
+  my_config_file: |-
+    Useful information for my frontend app 
+    in several lines of a file
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-cm
+  namespace: backend
+data: 
+  my_variable: "Hello World from backend!"
+  my_config_file.txt: |-
+    Useful information for my backend app
+    in several lines of a file
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: frontend-secret
+  namespace: frontend
+type: Opaque
+data: 
+  my_secret: VGhpcyBpcyBhIHNlY3JldCBmb3IgZnJvbnRlbmQhCg==
+  my_secret_file: |-
+    VGhpcyBpcyBhIHNlY3JldCBmb3IgZnJvbnRlbmQgc3RvcmVkIGluIGEgZmlsZSEKU2FtcGxlIGlu
+    Zm9ybWF0aW9uCg==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secret
+  namespace: backend
+type: Opaque
+data: 
+  my_secret: VGhpcyBpcyBhIHNlY3JldCBmb3IgYmFja2VuZCEK
+  my_secret_file: |-
+    VGhpcyBpcyBhIHNlY3JldCBmb3IgYmFja2VuZCBzdG9yZWQgaW4gYSBmaWxlIQpTYW1wbGUgaW5m
+    b3JtYXRpb24K

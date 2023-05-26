@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata: 
+  name: backend
+  labels:
+    environment: sandbox
+    name: backend
+---  
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: backend-lr
+  namespace: backend
+spec:
+  limits:
+    - default:
+        cpu: "1000m"  
+        memory: "1024Mi"
+      defaultRequest:
+        cpu: "500m"    
+        memory: "512Mi" 
+      type: Container 
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: backend-rq
+  namespace: backend
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi  
+    pods: "11"    
+    configmaps: "5" 
+    persistentvolumeclaims: "5" 
+    secrets: "5" 
+    services: "5"    

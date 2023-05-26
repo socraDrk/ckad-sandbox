@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: frontend-microservice
+  namespace: frontend
+  labels:
+    app: frontend-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-app
+  template:  
+    metadata:
+      labels: 
+        app: frontend-app
+    spec:
+      initContainers:
+        - name: init-backend
+          image: busybox:1.31
+          command: ['sh', '-c', 'echo -e "Checking for the availability of backend deployment"; while ! nc -z backend-microservice.backend 8000; do sleep 1; printf "-"; done; echo -e "  >> Backend Server has started";']      
+      containers:
+        - name: frontend-app
+          image: [AWS_ACCOUNT].dkr.ecr.[AWS_REGION].amazonaws.com/ckad-sandbox-sandbox-frontend:latest
+          imagePullPolicy: Always
+          ports: 
+            - containerPort: 8080         
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "750m"                  
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10  
+          volumeMounts:
+            - name: frontend-storage
+              mountPath: /var/lib/frontend    
+      volumes: 
+        - name: frontend-storage
+          persistentVolumeClaim:
+            claimName: frontend-pvc
+        - name: frontend-config-volume
+          configMap:
+            name: frontend-cm
+            items:
+            - key: my_config_file.txt
+              path: my_config_file.txt
+        - name: frontend-secret-volume
+          secret:
+            secretName: frontend-secret
+            items:
+            - key: my_secret_file
+              path: id_rsa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-microservice
+  namespace: frontend
+spec:
+  selector:
+    app: frontend-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: backend-microservice
+  namespace: backend
+  labels:
+    app: backend-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app
+  template:  
+    metadata:
+      labels: 
+        app: backend-app
+    spec:
+      initContainers:
+        - name: test-container
+          image: registry.k8s.io/busybox
+          command: [ "/bin/sh","-c","cat /etc/ssh/id_rsa && cat /etc/config/my_config_file.txt && echo $SECRET_KEY && echo $CONFIG_KEY" ]
+          env:          
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: my_secret
+            - name: CONFIG_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-cm  
+                  key: my_variable
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          volumeMounts:
+          - name: backend-config-volume
+            mountPath: /etc/config
+          - name: backend-secret-volume
+            mountPath: /etc/ssh/
+      containers:
+        - name: backend-app
+          image: [AWS_ACCOUNT].dkr.ecr.[AWS_REGION].amazonaws.com/ckad-sandbox-sandbox-backend:latest
+          imagePullPolicy: Always
+          ports: 
+            - containerPort: 8000         
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: token  
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "750m"                  
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10  
+          volumeMounts:
+            - name: backend-storage
+              mountPath: /var/lib/backend    
+      volumes: 
+        - name: backend-storage
+          persistentVolumeClaim:
+            claimName: backend-pvc
+        - name: backend-config-volume
+          configMap:
+            name: backend-cm
+            items:
+            - key: my_config_file.txt
+              path: my_config_file.txt
+        - name: backend-secret-volume
+          secret:
+            secretName: backend-secret
+            items:
+            - key: my_secret_file
+              path: id_rsa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-microservice
+  namespace: backend
+spec:
+  selector:
+    app: backend-app
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

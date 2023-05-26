@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata: 
+  name: frontend
+  labels:
+    environment: sandbox
+    name: frontend
+---  
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: frontend-lr
+  namespace: frontend
+spec:
+  limits:
+    - default:
+        cpu: "1000m"  
+        memory: "1024Mi"
+      defaultRequest:
+        cpu: "500m"    
+        memory: "512Mi" 
+      type: Container 
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: frontend-rq
+  namespace: frontend
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi  
+    pods: "11"    
+    configmaps: "5" 
+    persistentvolumeclaims: "5" 
+    secrets: "5" 
+    services: "5"    

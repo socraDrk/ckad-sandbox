@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: default-cronjob
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels: 
+            app: default-cronjob
+        spec:
+          containers:
+          - name: check-frontend-job 
+            image: curlimages/curl:7.72.0
+            args:
+            - /bin/sh
+            - -ec
+            - "curl 'http://frontend-microservice.frontend:8080/'"
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: default-job
+spec:
+  template:
+    metadata:
+      labels: 
+        app: default-job
+    spec:
+      containers:
+      - name: send-prompt-job 
+        image: curlimages/curl:7.72.0
+        args:
+        - /bin/sh
+        - -ec
+        - "curl -H 'Content-Type: application/json' -X POST 'http://backend-microservice.backend:8000/prompt/' -d '{\"prompt\":\"Tell me how to explain in 50 words what is Kubernetes to a person that does not have any techincal knowledge\"}'"
+      restartPolicy: Never
+  backoffLimit: 4
