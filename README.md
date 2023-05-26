@@ -64,7 +64,9 @@ docker push [AWS_ACCOUNT_NUMBER].dkr.ecr.[AWS_REGION].amazonaws.com/ckad-sandbox
 Deploy rest of K8s resources
 ```bash
 cd ../../kubernetes
+# Create and add here your token for the OpenAI API
 kubectl create secret generic openai-secret --from-literal=token='OPENAI_TOKEN' -n backend
+# Replace the AWS account and region for the ECR repositories in both backend and frontend resoucr YAML
 kubectl apply -f 2.1-backend-resources.yaml
 kubectl apply -f 2.2-frontend-resources.yaml
 kubectl apply -f 3.1-job-resources.yaml
